@@ -62,23 +62,23 @@ export interface AppointmentRow {
   updated_at: Date;
 }
 
-// ── JWT payload (what gets encoded into the token) ────────────────────────────
+// ── JWT payload 
 export interface JwtPayload {
   userId: string;
   email: string;
   role: UserRole;
 }
 
-// ── Extends Express Request to carry the authenticated user ───────────────────
+// ── Extends Express Request to carry the authenticated user 
 // After the authenticate middleware runs, req.user is always populated
 export interface AuthenticatedRequest extends Request {
   user: JwtPayload;
 }
 
-// ── Safe public user (never expose password_hash to clients) ──────────────────
+// ── Safe public user (never expose password_hash to clients) 
 export type PublicUser = Omit<UserRow, 'password_hash'>;
 
-// ── Pagination ────────────────────────────────────────────────────────────────
+// ── Pagination 
 export interface PaginationParams {
   page: number;
   limit: number;
