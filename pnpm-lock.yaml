@@ -60,6 +60,9 @@ importers:
       '@types/pg':
         specifier: ^8.20.0
         version: 8.20.0
+      '@types/qs':
+        specifier: ^6.15.1
+        version: 6.15.1
       '@types/uuid':
         specifier: ^11.0.0
         version: 11.0.0

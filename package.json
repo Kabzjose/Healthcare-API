@@ -30,6 +30,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.0.1",
     "@types/pg": "^8.20.0",
+    "@types/qs": "^6.15.1",
     "@types/uuid": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "^8.62.1",
     "@typescript-eslint/parser": "^8.62.1",
