@@ -41,6 +41,9 @@ const envSchema = z.object({
   // Stripe
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_CURRENCY: z.string().default('kes'),
+  STRIPE_SUCCESS_URL: z.string().url(),
+  STRIPE_CANCEL_URL: z.string().url(),
 
   // M-Pesa
   MPESA_CONSUMER_KEY: z.string().optional(),
