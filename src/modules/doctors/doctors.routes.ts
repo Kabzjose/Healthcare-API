@@ -11,7 +11,7 @@ import {
   listDoctorsQuerySchema,
 } from './doctors.schema';
 
-const router = Router();
+export const router: Router = Router();
 
 
 

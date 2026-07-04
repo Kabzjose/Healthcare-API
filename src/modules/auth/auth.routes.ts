@@ -9,7 +9,7 @@ import {
   changePasswordSchema,
 } from './auth.schemas';
 
-const router = Router();
+export const router: Router = Router();
 
 // Public routes — no token required
 router.post('/register', validate(registerSchema), authController.register);
