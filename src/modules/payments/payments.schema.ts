@@ -3,7 +3,7 @@ import { z } from 'zod';
 // ── Create a Stripe checkout session ─────────────────────────────────────────
 export const createCheckoutSessionSchema = z.object({
   appointment_id: z
-    .string({ required_error: 'Appointment ID is required' })
+    .string({ error: 'Appointment ID is required' })
     .uuid('Appointment ID must be a valid UUID'),
 });
 
