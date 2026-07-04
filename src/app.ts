@@ -7,10 +7,10 @@ import { errorHandler } from './middleware/errorHandler';
 import { logger } from './config/logger';
 import authRoutes from './modules/auth/auth.routes';
 import doctorsRoutes from './modules/doctors/doctors.routes';
-import appointmentsRoutes from './modules/appointments/appointments.routes';                
+import appointmentsRoutes from './modules/appointments/appointments.routes';  
+import paymentsRoutes from './modules/payments/payments.routes';              
 
-const app = express();
-
+const app: express.Express = express();
 
 app.use(helmet()); 
 
@@ -66,7 +66,7 @@ app.get('/health', (_req, res) => {
 app.use('/auth', authLimiter, authRoutes);
 app.use('/doctors', doctorsRoutes);
 app.use('/appointments', appointmentsRoutes);
-
+app.use('/payments', paymentsRoutes);
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });

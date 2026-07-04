@@ -1,19 +1,33 @@
 import { db, withTransaction } from '../../database/db';
 import { ApiError } from '../../utils/ApiError';
 import { logger } from '../../config/logger';
+import * as smsService from '../../integrations/africas-talking/sms.service';
 import { PaginatedResult ,AppointmentRow, AppointmentWithDetails } from '../../types';
 import {
   CreateAppointmentInput,
   UpdateAppointmentStatusInput,
   ListAppointmentsQuery,
 } from './appointments.schema';
-import { ca } from 'zod/locales';
+
 
 // ── Create Appointment (Patient) ─────────────────────────────────────────────
 export const createAppointment = async (
   patientId: string,
   input: CreateAppointmentInput
 ): Promise<AppointmentRow> => {
+  type UserContactRow = {
+    phone: string | null;
+    first_name: string;
+    last_name: string;
+  };
+
+  type AppointmentNotificationRow = {
+    patient_first_name: string;
+    patient_last_name: string;
+    doctor_first_name: string;
+    doctor_last_name: string;
+  };
+
   // 1. Enforce 3-day minimum lead time
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 3);
@@ -97,12 +111,69 @@ export const createAppointment = async (
   );
 
   const appointment = result.rows[0];
+  const notificationResult = await db.query<AppointmentNotificationRow>(
+    `SELECT
+       pu.first_name   AS patient_first_name,
+       pu.last_name    AS patient_last_name,
+       du.first_name   AS doctor_first_name,
+       du.last_name    AS doctor_last_name
+     FROM appointments a
+     JOIN users pu           ON pu.id = a.patient_id
+     JOIN doctor_profiles dp ON dp.id = a.doctor_id
+     JOIN users du           ON du.id = dp.user_id
+     WHERE a.id = $1`,
+    [appointment.id]
+  );
+
+  const notification = notificationResult.rows[0];
 
   // Log successfully BEFORE returning the value
   logger.info('Appointment created', { 
     appointmentId: appointment.id, 
     patientId 
   });
+
+  // Fire SMS and calendar in parallel — don't await so booking responds fast
+void Promise.all([
+  // SMS to patient (only if they have a phone number)
+  db.query<UserContactRow>('SELECT phone, first_name, last_name FROM users WHERE id = $1', [patientId])
+    .then(({ rows }) => {
+      const patient = rows[0];
+      if (patient?.phone) {
+        return smsService.sendBookingConfirmationToPatient({
+          phone: patient.phone,
+          patientName: `${patient.first_name} ${patient.last_name}`,
+          doctorName: `${notification.doctor_first_name} ${notification.doctor_last_name}`,
+          date: input.appointment_date,
+          startTime: appointment.start_time,
+          fee: appointment.consultation_fee,
+        });
+      }
+      return undefined;
+    }),
+
+  // SMS to doctor
+  db.query(
+    `SELECT u.phone, u.first_name, u.last_name
+     FROM users u
+     JOIN doctor_profiles dp ON dp.user_id = u.id
+     WHERE dp.id = $1`,
+    [input.doctor_id]
+  ).then(({ rows }) => {
+    const doctor = rows[0] as UserContactRow | undefined;
+    if (doctor?.phone) {
+      return smsService.sendBookingNotificationToDoctor({
+        phone: doctor.phone,
+        doctorName: `${doctor.first_name} ${doctor.last_name}`,
+        patientName: `${notification.patient_first_name} ${notification.patient_last_name}`,
+        date: input.appointment_date,
+        startTime: appointment.start_time,
+        reason: input.reason,
+      });
+    }
+    return undefined;
+  }),
+]);
 
   return appointment;
 

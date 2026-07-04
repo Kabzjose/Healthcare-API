@@ -1,4 +1,4 @@
-import { Pool, PoolClient, QueryResultRow} from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
 
@@ -24,7 +24,13 @@ pool.on('error', (err) => {
 
 // ── Main query function ───────────────────────────────────────────────────────
 // Use this for single queries throughout the app
-export const db = {
+export const db: {
+  query: <T extends QueryResultRow = Record<string, unknown>>(
+    text: string,
+    params?: unknown[]
+  ) => Promise<QueryResult<T>>;
+  getClient: () => Promise<PoolClient>;
+} = {
   // 2. Add 'extends QueryResultRow' to constrain the generic type T
   query: <T extends QueryResultRow = Record<string, unknown>>(
     text: string,
