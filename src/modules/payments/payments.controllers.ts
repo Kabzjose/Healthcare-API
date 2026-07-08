@@ -4,6 +4,9 @@ import { ApiResponse } from '../../utils/ApiResponse';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { AuthenticatedRequest } from '../../types';
 import { CreateCheckoutSessionInput, ListPaymentsQuery } from './payments.schema';
+import { InitiateMpesaInput } from './payments.schema';
+import { MpesaCallbackPayload } from '../../integrations/mpesa/mpesa.service';
+
 
 // ── POST /payments/checkout ───────────────────────────────────────────────────
 // Patient initiates payment for an appointment
@@ -46,3 +49,24 @@ export const getMyPayments = asyncHandler(
     return ApiResponse.ok(res, 'Payments fetched', result.data, result.meta as Record<string, unknown>);
   }
 );
+// ── POST /payments/mpesa/initiate ─────────────────────────────────────────────
+export const initiateMpesa = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const result = await paymentsService.initiateMpesaPayment(
+      req.user.userId,
+      req.body as InitiateMpesaInput
+    );
+    return ApiResponse.ok(res, result.message, { checkoutRequestId: result.checkoutRequestId });
+  }
+);
+
+// ── POST /payments/mpesa/callback ─────────────────────────────────────────────
+// Safaricom calls this — NOT your frontend
+export const mpesaCallback = asyncHandler(async (req: Request, res: Response) => {
+  await paymentsService.handleMpesaCallback(req.body as MpesaCallbackPayload);
+  // Safaricom expects a specific response shape
+  res.status(200).json({
+    ResultCode: 0,
+    ResultDesc: 'Accepted',
+  });
+});

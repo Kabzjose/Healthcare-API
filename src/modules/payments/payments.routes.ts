@@ -4,6 +4,7 @@ import * as paymentsController from './payments.controllers';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
 import { validate, validateQuery } from '../../middleware/validate';
+import { initiateMpesaSchema } from './payments.schema';
 import {
   createCheckoutSessionSchema,
   listPaymentsQuerySchema,
@@ -41,5 +42,20 @@ router.get(
   validateQuery(listPaymentsQuerySchema),
   paymentsController.getMyPayments
 );
+
+
+// ── M-Pesa routes ─────────────────────────────────────────────────────────────
+
+// Patient initiates M-Pesa STK push
+router.post(
+  '/mpesa/initiate',
+  authenticate,
+  authorize('patient'),
+  validate(initiateMpesaSchema),
+  paymentsController.initiateMpesa
+);
+
+// Safaricom callback — no auth (Safaricom calls this directly)
+router.post('/mpesa/callback', paymentsController.mpesaCallback);
 
 export default router;
