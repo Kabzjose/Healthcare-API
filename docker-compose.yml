@@ -1,0 +1,46 @@
+services:
+  # ── PostgreSQL database ──────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: healthcare_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-healthcare}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-healthcare_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-healthcare_db}
+    ports:
+      - '5432:5432'
+    volumes:
+      # Persist data between container restarts
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-run migrations on first start
+      - ./src/database/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-healthcare}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API server ────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      target: production
+    container_name: healthcare_api
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-healthcare}:${POSTGRES_PASSWORD:-healthcare_pass}@postgres:5432/${POSTGRES_DB:-healthcare_db}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:
