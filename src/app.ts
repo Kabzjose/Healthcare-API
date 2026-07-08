@@ -48,9 +48,16 @@ const authLimiter = rateLimit({
 app.use(limiter);
 
 // ── Body parsing ──────────────────────────────────────────────────────────────
-app.use(express.json());       
-app.use(express.urlencoded({ extended: true }));
+// Skip JSON parsing for the Stripe webhook route — it needs the raw body
+app.use((req, res, next) => {
+  if (req.originalUrl === '/payments/webhook') {
+    next(); // skip — express.raw() on the route itself handles it
+  } else {
+    express.json({ limit: '10kb' })(req, res, next);
+  }
+});
 
+app.use(express.urlencoded({ extended: true }));
 // ── Request logging ───────────────────────────────────────────────────────────
 app.use((req, _res, next) => {
   logger.debug(`${req.method} ${req.path}`, { ip: req.ip });
