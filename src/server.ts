@@ -2,14 +2,18 @@ import app from './app';
 import { env } from './config/env';
 import { logger } from './config/logger';
 import { checkDatabaseConnection } from './database/db';
+import { startScheduler } from './jobs/scheduler';
 
 const startServer = async (): Promise<void> => {
   try {
     // Verify DB is reachable before accepting traffic
     await checkDatabaseConnection();
+    startScheduler();
+
+    // Start the server
 
     const server = app.listen(env.PORT, () => {
-      logger.info(`🚀  Server running`, {
+      logger.info(`Server running`, {
         port: env.PORT,
         env: env.NODE_ENV,
         url: `http://localhost:${env.PORT}`,
