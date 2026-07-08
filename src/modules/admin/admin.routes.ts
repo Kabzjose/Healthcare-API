@@ -13,7 +13,7 @@ import {
   adminUpdatePaymentStatusSchema,
 } from './admin.schemas';
 
-const router = Router();
+const router: Router = Router();
 
 router.use(authenticate, authorize('admin'));
 
