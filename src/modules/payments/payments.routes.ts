@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import express from 'express';
 import * as paymentsController from './payments.controllers';
+import * as stripePaymentsController from './stripe.controller';
+import * as mpesaPaymentsController from './mpesa.controller';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
 import { validate, validateQuery } from '../../middleware/validate';
-import { initiateMpesaSchema } from './payments.schema';
 import {
   createCheckoutSessionSchema,
+  initiateMpesaSchema,
   listPaymentsQuerySchema,
 } from './payments.schema';
 
@@ -20,7 +22,7 @@ export const router: Router = Router();
 router.post(
   '/webhook',
   express.raw({ type: 'application/json' }),
-  paymentsController.stripeWebhook
+  stripePaymentsController.stripeWebhook
 );
 
 // ── Patient routes ────────────────────────────────────────────────────────────
@@ -31,7 +33,7 @@ router.post(
   authenticate,
   authorize('patient'),
   validate(createCheckoutSessionSchema),
-  paymentsController.createCheckoutSession
+  stripePaymentsController.createCheckoutSession
 );
 
 // View payment history
@@ -52,10 +54,10 @@ router.post(
   authenticate,
   authorize('patient'),
   validate(initiateMpesaSchema),
-  paymentsController.initiateMpesa
+  mpesaPaymentsController.initiateMpesa
 );
 
 // Safaricom callback — no auth (Safaricom calls this directly)
-router.post('/mpesa/callback', paymentsController.mpesaCallback);
+router.post('/mpesa/callback', mpesaPaymentsController.mpesaCallback);
 
 export default router;
