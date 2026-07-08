@@ -52,6 +52,7 @@ const envSchema = z.object({
   MPESA_SHORTCODE: z.string().optional(),
   MPESA_CALLBACK_URL: z.string().optional(),
   MPESA_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
+  APP_URL: z.string().default('http://localhost:3000'),
 
   // Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('debug'),
