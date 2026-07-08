@@ -9,7 +9,7 @@ import {
   listAppointmentsSchema,
 } from './appointments.schema';
 
-const router = Router();
+const router: Router = Router();
 
 // ── Patient Routes ───────────────────────────────────────────────────────────
 router.post(

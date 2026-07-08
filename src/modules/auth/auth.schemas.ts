@@ -29,8 +29,7 @@ export const registerSchema = z.object({
     .regex(/^\+?[1-9]\d{7,14}$/, 'Invalid phone number')
     .optional(),
 
-  role: z.enum(['patient', 'doctor']).default('patient'),
-  // Note: 'admin' role cannot be self-assigned — only set via DB or admin panel
+  role: z.enum(['patient', 'doctor', 'admin']).default('patient'),
 });
 
 // ── Login ─────────────────────────────────────────────────────────────────────

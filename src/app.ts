@@ -9,6 +9,7 @@ import authRoutes from './modules/auth/auth.routes';
 import doctorsRoutes from './modules/doctors/doctors.routes';
 import appointmentsRoutes from './modules/appointments/appointments.routes';  
 import paymentsRoutes from './modules/payments/payments.routes';              
+import adminRoutes from './modules/admin/admin.routes';
 
 const app: express.Express = express();
 
@@ -74,6 +75,7 @@ app.use('/auth', authLimiter, authRoutes);
 app.use('/doctors', doctorsRoutes);
 app.use('/appointments', appointmentsRoutes);
 app.use('/payments', paymentsRoutes);
+app.use('/admin', adminRoutes);
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });

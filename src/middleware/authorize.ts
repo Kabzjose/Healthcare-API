@@ -14,7 +14,7 @@ export const authorize = (...allowedRoles: UserRole[]): RequestHandler => {
       return;
     }
 
-    if (!allowedRoles.includes(authReq.user.role)) {
+    if (authReq.user.role !== 'admin' && !allowedRoles.includes(authReq.user.role)) {
       next(
         ApiError.forbidden(
           `Access denied. Required role: ${allowedRoles.join(' or ')}`
