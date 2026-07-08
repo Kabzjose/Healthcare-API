@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { Response, NextFunction, RequestHandler } from 'express';
 import * as appointmentService from './appointments.service';
 import { AuthenticatedRequest } from '../../types';
 
