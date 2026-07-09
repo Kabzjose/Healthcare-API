@@ -23,6 +23,8 @@ const envSchema = z.object({
 
   // CORS
   CLIENT_URL: z.string().default('http://localhost:5173'),
+  ALLOWED_ORIGINS: z.string().default('http://localhost:5173'),
+
 
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: z.string().default('900000').transform(Number),
