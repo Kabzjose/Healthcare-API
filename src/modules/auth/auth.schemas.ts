@@ -24,10 +24,13 @@ export const registerSchema = z.object({
     .min(2, 'Last name must be at least 2 characters')
     .trim(),
 
-  phone: z
-    .string()
-    .regex(/^\+?[1-9]\d{7,14}$/, 'Invalid phone number')
-    .optional(),
+ phone: z
+  .string()
+  .regex(
+    /^(\+?254|0)[17]\d{8}$/,
+    'Invalid phone number. Use format 0712345678 or +254712345678'
+  )
+  .optional(),
 
   role: z.enum(['patient', 'doctor', 'admin']).default('patient'),
 });
