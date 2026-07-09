@@ -24,6 +24,9 @@ app.use(
   })
 );
 
+// Trust the first proxy (e.g., if behind a load balancer or reverse proxy)
+app.set('trust proxy', 1); 
+
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,  // 15 minutes
