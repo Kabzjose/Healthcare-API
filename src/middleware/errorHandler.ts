@@ -23,16 +23,19 @@ export const errorHandler = (
   // ── Zod validation errors (thrown by validate middleware) ──────────────────
   // These happen when request body fails schema validation
   if (err instanceof ZodError) {
-    res.status(422).json({
-      success: false,
-      message: 'Validation failed',
-      errors: err.issues.map((issue) => ({
-        field: issue.path.join('.'), // e.g. "email" or "address.city"
-        message: issue.message,
-      })),
-    });
-    return;
-  }
+  // Add this log line
+  logger.error('Zod validation details', { issues: err.issues });
+
+  res.status(422).json({
+    success: false,
+    message: 'Validation failed',
+    errors: err.issues.map((issue) => ({
+      field: issue.path.join('.'),
+      message: issue.message,
+    })),
+  });
+  return;
+}
 
   // ── Our custom ApiError ────────────────────────────────────────────────────
   if (err instanceof ApiError) {
