@@ -16,13 +16,14 @@ export const createDoctorProfileSchema = z.object({
   bio: z.string().max(1000, 'Bio cannot exceed 1000 characters').trim().optional(),
 
   consultation_fee: z
-    .number()
-    .min(0, 'Consultation fee cannot be negative'),
+  .union([z.string(), z.number()])
+  .transform((val) => Number(val))
+  .refine((val) => !isNaN(val) && val >= 0, 'Consultation fee cannot be negative'),
 
   years_of_experience: z
-    .number()
-    .int('Years of experience must be a whole number')
-    .min(0, 'Years of experience cannot be negative')
+    .union([z.string(), z.number()])
+    .transform((val) => Number(val))
+    .refine((val) => !isNaN(val) && val >= 0, 'Years of experience cannot be negative')
     .default(0),
 });
 
