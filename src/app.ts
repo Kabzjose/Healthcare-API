@@ -37,7 +37,7 @@ app.use(
 );
 
 // Explicitly handle preflight requests for all routes
-app.options('*', cors());
+app.options('/{*path}', cors());
 
 // Trust the first proxy (e.g., if behind a load balancer or reverse proxy)
 app.set('trust proxy', 1); 

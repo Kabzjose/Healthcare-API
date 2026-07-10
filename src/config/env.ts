@@ -22,8 +22,8 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
 
   // CORS
-  CLIENT_URL: z.string().default('http://localhost:5173'),
-  ALLOWED_ORIGINS: z.string().default('http://localhost:5173'),
+  CLIENT_URL: z.string().default('http://localhost:3000'),
+  ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
 
 
   // Rate Limiting
