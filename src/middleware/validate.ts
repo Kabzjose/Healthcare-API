@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { ParsedQs } from 'qs';
 import { ZodTypeAny } from 'zod';
 
 type RequestPayload = {
@@ -27,7 +26,15 @@ const applyValidatedData = (
 ): void => {
   if (validated.body !== undefined) req.body = validated.body;
   if (validated.params !== undefined) req.params = validated.params as Record<string, string>;
-  if (validated.query !== undefined) req.query = validated.query as ParsedQs;
+  if (validated.query !== undefined) {
+    const currentQuery = req.query as Record<string, unknown>;
+
+    for (const key of Object.keys(currentQuery)) {
+      delete currentQuery[key];
+    }
+
+    Object.assign(currentQuery, validated.query as Record<string, unknown>);
+  }
 };
 
 const createValidator = (
@@ -54,7 +61,15 @@ const createValidator = (
           applyValidatedData(req, preferred);
         } else {
           if (source === 'body') req.body = preferred as Request['body'];
-          if (source === 'query') req.query = preferred as ParsedQs;
+          if (source === 'query') {
+            const currentQuery = req.query as Record<string, unknown>;
+
+            for (const key of Object.keys(currentQuery)) {
+              delete currentQuery[key];
+            }
+
+            Object.assign(currentQuery, preferred as Record<string, unknown>);
+          }
           if (source === 'params') req.params = preferred as Request['params'];
         }
         next();
