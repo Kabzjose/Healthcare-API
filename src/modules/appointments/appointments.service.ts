@@ -4,7 +4,7 @@ import { logger } from '../../config/logger';
 import * as smsService from '../../integrations/africas-talking/sms.service';
 import { PaginatedResult ,AppointmentRow, AppointmentWithDetails } from '../../types';
 import {
-  CreateAppointmentInput,
+  BookAppointmentInput,
   UpdateAppointmentStatusInput,
   ListAppointmentsQuery,
 } from './appointments.schema';
@@ -13,7 +13,7 @@ import {
 // ── Create Appointment (Patient) ─────────────────────────────────────────────
 export const createAppointment = async (
   patientId: string,
-  input: CreateAppointmentInput
+  input: BookAppointmentInput
 ): Promise<AppointmentRow> => {
   type UserContactRow = {
     phone: string | null;
@@ -272,7 +272,8 @@ export const listAppointments = async (
   role: string,
   query: ListAppointmentsQuery
 ): Promise<PaginatedResult<AppointmentWithDetails>> => {
-  const { page, limit, status, view } = query;
+  const { page, limit, status } = query;
+  const view = (query as ListAppointmentsQuery & { view?: 'upcoming' | 'past' }).view;
   const offset = (page - 1) * limit;
 
   const conditions: string[] = [];
