@@ -1,63 +1,80 @@
 import { z } from 'zod';
 
-// ── Create Appointment (Patient) ─────────────────────────────────────────────
-export const createAppointmentSchema = z.object({
-  body: z.object({
-    doctor_id: z.string().uuid('Invalid doctor ID format'),
-    availability_slot_id: z.string().uuid('Invalid slot ID format'),
-    appointment_date: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
-    reason: z.string().max(500).optional(),
-  }),
+// ── Book appointment (patient) ────────────────────────────────────────────────
+export const bookAppointmentSchema = z.object({
+  doctor_id: z
+    .string({ error: 'Doctor ID is required' })
+    .uuid('Doctor ID must be a valid UUID'),
+
+  availability_slot_id: z
+    .string({ error: 'Slot ID is required' })
+    .uuid('Slot ID must be a valid UUID'),
+
+  appointment_date: z
+    .string({ error: 'Appointment date is required' })
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .refine((date) => new Date(date) >= new Date(new Date().toDateString()), {
+      message: 'Appointment date cannot be in the past',
+    }),
+
+  reason: z
+    .string()
+    .min(5, 'Please provide a brief reason for the visit')
+    .max(500, 'Reason cannot exceed 500 characters')
+    .trim()
+    .optional(),
 });
 
-// ── Update Status (Doctor) ───────────────────────────────────────────────────
+// ── Update appointment status (doctor) ────────────────────────────────────────
 export const updateAppointmentStatusSchema = z.object({
-  params: z.object({
-    id: z.string().uuid('Invalid appointment ID format'),
-  }),
-  body: z.object({
-    status: z.enum([
-      'confirmed',
-      'completed',
-      'no_show',
-      'cancelled',
-    ]),
-  }),
+  status: z
+    .string({ error: 'Status is required' })
+    .refine((value) => ['confirmed', 'completed', 'no_show'].includes(value), {
+      message: 'Status must be one of: confirmed, completed, no_show',
+    }),
+  notes: z
+    .string()
+    .max(1000, 'Notes cannot exceed 1000 characters')
+    .trim()
+    .optional(),
 });
 
-// ── List Appointments (Patient/Doctor) ───────────────────────────────────────
-export const listAppointmentsSchema = z.object({
-  query: z.object({
-    page: z.coerce.number().int().positive().default(1),
-    limit: z.coerce.number().int().positive().max(100).default(10),
-    status: z
-      .enum([
-        'pending',
-        'confirmed',
-        'cancelled',
-        'completed',
-        'no_show',
-      ])
-      .optional(),
-    view: z.enum(['upcoming', 'past']).optional(),
-  }),
+// ── Cancel appointment (patient) ──────────────────────────────────────────────
+export const cancelAppointmentSchema = z.object({
+  reason: z
+    .string()
+    .max(500, 'Reason cannot exceed 500 characters')
+    .trim()
+    .optional(),
 });
 
-// ── Get Appointment By ID ────────────────────────────────────────────────────
-export const appointmentIdSchema = z.object({
-  params: z.object({
-    id: z.string().uuid('Invalid appointment ID format'),
-  }),
+// ── List appointments query params ────────────────────────────────────────────
+export const listAppointmentsQuerySchema = z.object({
+  status: z
+    .enum(['pending', 'confirmed', 'cancelled', 'completed', 'no_show'])
+    .optional(),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .optional(),
+  page: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const n = Number(val ?? '1');
+      return isNaN(n) || n < 1 ? 1 : n;
+    }),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const n = Number(val ?? '10');
+      return isNaN(n) || n < 1 ? 10 : n;
+    }),
 });
 
-// ── Inferred Types ───────────────────────────────────────────────────────────
-export type CreateAppointmentInput =
-  z.infer<typeof createAppointmentSchema>['body'];
-
-export type UpdateAppointmentStatusInput =
-  z.infer<typeof updateAppointmentStatusSchema>['body'];
-
-export type ListAppointmentsQuery =
-  z.infer<typeof listAppointmentsSchema>['query'];
+// ── Inferred types ────────────────────────────────────────────────────────────
+export type BookAppointmentInput = z.infer<typeof bookAppointmentSchema>;
+export type UpdateAppointmentStatusInput = z.infer<typeof updateAppointmentStatusSchema>;
+export type CancelAppointmentInput = z.infer<typeof cancelAppointmentSchema>;
+export type ListAppointmentsQuery = z.infer<typeof listAppointmentsQuerySchema>;

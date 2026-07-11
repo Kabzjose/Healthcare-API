@@ -1,55 +1,65 @@
 import { Router } from 'express';
-import * as appointmentController from './appointments.controller';
+import * as appointmentsController from './appointments.controller';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
-import { validate } from '../../middleware/validate';
+import { validate, validateQuery } from '../../middleware/validate';
 import {
-  createAppointmentSchema,
+  bookAppointmentSchema,
   updateAppointmentStatusSchema,
-  listAppointmentsSchema,
+  cancelAppointmentSchema,
+  listAppointmentsQuerySchema,
 } from './appointments.schema';
 
 const router: Router = Router();
 
-// ── Patient Routes ───────────────────────────────────────────────────────────
+// ── These MUST come before /:appointmentId ────────────────────────────────────
+
 router.post(
   '/',
   authenticate,
   authorize('patient'),
-  validate(createAppointmentSchema),
-  appointmentController.createAppointment
+  validate(bookAppointmentSchema),
+  appointmentsController.createAppointment
 );
 
-router.post(
+router.get(
+  '/my',
+  authenticate,
+  authorize('patient'),
+  validateQuery(listAppointmentsQuerySchema),
+  appointmentsController.getMyAppointments
+);
+
+router.get(
+  '/doctor/my',
+  authenticate,
+  authorize('doctor'),
+  validateQuery(listAppointmentsQuerySchema),
+  appointmentsController.getMyAppointments
+);
+
+router.patch(
   '/:id/cancel',
   authenticate,
   authorize('patient'),
-  appointmentController.cancelAppointment
+  validate(cancelAppointmentSchema),
+  appointmentsController.cancelAppointment
 );
 
-// ── Doctor Routes ────────────────────────────────────────────────────────────
 router.patch(
   '/:id/status',
   authenticate,
   authorize('doctor'),
   validate(updateAppointmentStatusSchema),
-  appointmentController.updateAppointmentStatus
+  appointmentsController.updateAppointmentStatus
 );
 
-// ── Shared Routes (Patient & Doctor) ─────────────────────────────────────────
-router.get(
-  '/',
-  authenticate,
-  authorize('patient', 'doctor'),
-  validate(listAppointmentsSchema),
-  appointmentController.getMyAppointments
-);
-
+// ── /:appointmentId MUST be last ──────────────────────────────────────────────
 router.get(
   '/:id',
   authenticate,
-  authorize('patient', 'doctor'),
-  appointmentController.getAppointmentById
+  authorize('patient', 'doctor', 'admin'),
+  appointmentsController.getAppointmentById
 );
 
 export default router;
