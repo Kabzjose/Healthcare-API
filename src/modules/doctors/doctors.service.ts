@@ -179,7 +179,9 @@ export const updateProfile = async (
 export const listDoctors = async (
   query: ListDoctorsQuery
 ): Promise<PaginatedResult<DoctorWithProfile>> => {
-  const { specialization, page, limit } = query;
+  const { specialization } = query;
+  const page = normalizePositiveInt(query.page, 1);
+  const limit = normalizePositiveInt(query.limit, 10);
   const offset = (page - 1) * limit;
 
   // Build optional WHERE filter
@@ -237,6 +239,14 @@ export const listDoctors = async (
       totalPages: Math.ceil(total / limit),
     },
   };
+};
+
+const normalizePositiveInt = (value: unknown, fallback: number): number => {
+  const numericValue = typeof value === 'number' ? value : Number(value);
+
+  return Number.isInteger(numericValue) && numericValue >= 1
+    ? numericValue
+    : fallback;
 };
 
 // ── Create availability slots (bulk) ──────────────────────────────────────────
