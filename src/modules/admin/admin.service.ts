@@ -76,7 +76,9 @@ export const listUsers = async (
   query: AdminListUsersQuery
 ): Promise<PaginatedResult<AdminUserRow>> => {
   const { role, is_active, page, limit } = query;
-  const offset = (page - 1) * limit;
+  const safePage = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+  const safeLimit = Number.isFinite(limit) && limit >= 1 ? Math.floor(limit) : 20;
+  const offset = (safePage - 1) * safeLimit;
 
   const conditions = ['1 = 1'];
   const values: unknown[] = [];
@@ -100,7 +102,7 @@ export const listUsers = async (
   );
   const total = parseInt(countResult.rows[0].count, 10);
 
-  values.push(limit, offset);
+  values.push(safeLimit, offset);
 
   const result = await db.query<AdminUserRow>(
     `SELECT id, email, first_name, last_name, phone, role, is_active, is_verified, created_at, updated_at
@@ -113,7 +115,7 @@ export const listUsers = async (
 
   return {
     data: result.rows,
-    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    meta: { total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) },
   };
 };
 
@@ -153,7 +155,9 @@ export const listAppointments = async (
   query: AdminListAppointmentsQuery
 ): Promise<PaginatedResult<AdminAppointmentRow>> => {
   const { status, payment_status, page, limit } = query;
-  const offset = (page - 1) * limit;
+  const safePage = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+  const safeLimit = Number.isFinite(limit) && limit >= 1 ? Math.floor(limit) : 20;
+  const offset = (safePage - 1) * safeLimit;
 
   const conditions = ['1 = 1'];
   const values: unknown[] = [];
@@ -182,7 +186,7 @@ export const listAppointments = async (
   );
   const total = parseInt(countResult.rows[0].count, 10);
 
-  values.push(limit, offset);
+  values.push(safeLimit, offset);
 
   const result = await db.query<AdminAppointmentRow>(
     `SELECT
@@ -213,7 +217,7 @@ export const listAppointments = async (
 
   return {
     data: result.rows,
-    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    meta: { total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) },
   };
 };
 
@@ -253,7 +257,9 @@ export const listPayments = async (
   query: AdminListPaymentsQuery
 ): Promise<PaginatedResult<AdminPaymentRow>> => {
   const { provider, status, page, limit } = query;
-  const offset = (page - 1) * limit;
+  const safePage = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+  const safeLimit = Number.isFinite(limit) && limit >= 1 ? Math.floor(limit) : 20;
+  const offset = (safePage - 1) * safeLimit;
 
   const conditions = ['1 = 1'];
   const values: unknown[] = [];
@@ -283,7 +289,7 @@ export const listPayments = async (
   );
   const total = parseInt(countResult.rows[0].count, 10);
 
-  values.push(limit, offset);
+  values.push(safeLimit, offset);
 
   const result = await db.query<AdminPaymentRow>(
     `SELECT
@@ -317,6 +323,6 @@ export const listPayments = async (
 
   return {
     data: result.rows,
-    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    meta: { total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) },
   };
 };

@@ -274,7 +274,9 @@ export const listAppointments = async (
 ): Promise<PaginatedResult<AppointmentWithDetails>> => {
   const { page, limit, status } = query;
   const view = (query as ListAppointmentsQuery & { view?: 'upcoming' | 'past' }).view;
-  const offset = (page - 1) * limit;
+  const safePage = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+  const safeLimit = Number.isFinite(limit) && limit >= 1 ? Math.floor(limit) : 10;
+  const offset = (safePage - 1) * safeLimit;
 
   const conditions: string[] = [];
   const values: unknown[] = [];
@@ -316,7 +318,7 @@ export const listAppointments = async (
   const total = parseInt(countResult.rows[0].count, 10);
 
   // Fetch paginated data
-  values.push(limit, offset);
+  values.push(safeLimit, offset);
   const result = await db.query<AppointmentWithDetails>(
     `SELECT
        a.id, a.appointment_date, a.start_time, a.end_time, a.status, 
@@ -334,13 +336,13 @@ export const listAppointments = async (
      JOIN users d ON d.id = dp.user_id
      ${whereClause}
      ORDER BY a.appointment_date ASC, a.start_time ASC
-     LIMIT $${idx++} OFFSET $${idx}`,
+      LIMIT $${idx++} OFFSET $${idx}`,
     values
   );
 
   return {
     data: result.rows,
-    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    meta: { total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) },
   };
 };
 
