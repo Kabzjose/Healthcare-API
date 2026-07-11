@@ -50,7 +50,13 @@ const createValidator = (
       const preferred = runValidation(schema, payloads[source]);
 
       if (preferred) {
-        applyValidatedData(req, preferred);
+        if (source === 'request') {
+          applyValidatedData(req, preferred);
+        } else {
+          if (source === 'body') req.body = preferred as Request['body'];
+          if (source === 'query') req.query = preferred as ParsedQs;
+          if (source === 'params') req.params = preferred as Request['params'];
+        }
         next();
         return;
       }
