@@ -72,8 +72,20 @@ export const toggleSlotSchema = z.object({
 // ── Query params for listing doctors ─────────────────────────────────────────
 export const listDoctorsQuerySchema = z.object({
   specialization: z.string().trim().optional(),
-  page: z.string().default('1').transform(Number),
-  limit: z.string().default('10').transform(Number),
+  page: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const n = Number(val ?? '1');
+      return isNaN(n) || n < 1 ? 1 : n;
+    }),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const n = Number(val ?? '10');
+      return isNaN(n) || n < 1 ? 10 : n;
+    }),
 });
 
 // ── Inferred types ────────────────────────────────────────────────────────────
