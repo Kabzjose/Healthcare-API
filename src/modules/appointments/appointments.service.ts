@@ -371,17 +371,20 @@ export const getAppointmentById = async (
    pu.email        AS patient_email,
    pu.phone        AS patient_phone,
    dp.id           AS doctor_id,
-   du.first_name   AS doctor_first_name,   -- must be exactly this
-   du.last_name    AS doctor_last_name,    -- must be exactly this
+   du.first_name   AS doctor_first_name,   
+   du.last_name    AS doctor_last_name,    
    du.email        AS doctor_email,
    dp.specialization
  FROM appointments a
  JOIN users pu          ON pu.id = a.patient_id
  JOIN doctor_profiles dp ON dp.id = a.doctor_id
- JOIN users du          ON du.id = dp.user_id   -- must join users for doctor name
+ JOIN users du          ON du.id = dp.user_id   
  WHERE a.id = $1 AND ${roleCondition}`,
     [appointmentId, userId]
   );
+
+// Add this temporarily
+console.log('First appointment row:', JSON.stringify(result.rows[0], null, 2));
 
   if (!result.rows[0]) throw ApiError.notFound('Appointment not found');
   return result.rows[0];
