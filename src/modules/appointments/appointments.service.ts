@@ -356,17 +356,30 @@ export const getAppointmentById = async (
 
   const result = await db.query<AppointmentWithDetails>(
     `SELECT
-       a.id, a.appointment_date, a.start_time, a.end_time, a.status, 
-       a.reason, a.notes, a.consultation_fee, a.created_at,
-       p.first_name || ' ' || p.last_name AS patient_name,
-       p.email AS patient_email,
-       d.first_name || ' ' || d.last_name AS doctor_name,
-       dp.specialization
-     FROM appointments a
-     JOIN users p ON p.id = a.patient_id
-     JOIN doctor_profiles dp ON dp.id = a.doctor_id
-     JOIN users d ON d.id = dp.user_id
-     WHERE a.id = $1 AND ${roleCondition}`,
+   a.id,
+   a.appointment_date,
+   a.start_time,
+   a.end_time,
+   a.status,
+   a.reason,
+   a.notes,
+   a.consultation_fee,
+   a.created_at,
+   a.patient_id,
+   pu.first_name   AS patient_first_name,
+   pu.last_name    AS patient_last_name,
+   pu.email        AS patient_email,
+   pu.phone        AS patient_phone,
+   dp.id           AS doctor_id,
+   du.first_name   AS doctor_first_name,   -- must be exactly this
+   du.last_name    AS doctor_last_name,    -- must be exactly this
+   du.email        AS doctor_email,
+   dp.specialization
+ FROM appointments a
+ JOIN users pu          ON pu.id = a.patient_id
+ JOIN doctor_profiles dp ON dp.id = a.doctor_id
+ JOIN users du          ON du.id = dp.user_id   -- must join users for doctor name
+ WHERE a.id = $1 AND ${roleCondition}`,
     [appointmentId, userId]
   );
 
