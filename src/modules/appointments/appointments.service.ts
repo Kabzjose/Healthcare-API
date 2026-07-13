@@ -119,7 +119,7 @@ export const createAppointment = async (
     [appointment.id]
   );
 
-  const notification = notificationResult.rows[0];
+
 
   // Log successfully BEFORE returning the value
   logger.info('Appointment created', { 
@@ -127,7 +127,11 @@ export const createAppointment = async (
     patientId 
   });
 
-  await Promise.all([
+  
+  // Fetch full joined appointment details for SMS
+const fullAppointment = await getAppointmentById(appointment.id, patientId, 'patient');
+
+Promise.all([
   db.query<{ phone: string | null; first_name: string; last_name: string }>(
     `SELECT u.phone, u.first_name, u.last_name
      FROM users u WHERE u.id = $1`,
@@ -136,11 +140,11 @@ export const createAppointment = async (
     if (rows[0]?.phone) {
       return smsService.sendBookingConfirmationToPatient({
         phone: rows[0].phone,
-        patientName: `${rows[0].first_name} ${rows[0].last_name}`,
-        doctorName: `${notification.doctor_first_name} ${notification.doctor_last_name}`,
+        patientName: fullAppointment.patient_name,
+        doctorName: fullAppointment.doctor_name,
         date: input.appointment_date,
-        startTime: appointment.start_time,
-        fee: appointment.consultation_fee,
+        startTime: fullAppointment.start_time,
+        fee: fullAppointment.consultation_fee,
       });
     }
     return Promise.resolve();
@@ -158,10 +162,10 @@ export const createAppointment = async (
     if (rows[0]?.phone) {
       return smsService.sendBookingNotificationToDoctor({
         phone: rows[0].phone,
-        doctorName: `${rows[0].first_name} ${rows[0].last_name}`,
-        patientName: `${notification.patient_first_name} ${notification.patient_last_name}`,
+        doctorName: fullAppointment.doctor_name,
+        patientName: fullAppointment.patient_name,
         date: input.appointment_date,
-        startTime: appointment.start_time,
+        startTime: fullAppointment.start_time,
         reason: input.reason,
       });
     }
@@ -170,14 +174,10 @@ export const createAppointment = async (
     logger.error('Failed to send doctor booking SMS', { error: err?.message });
   }),
 ]).catch((err) => {
-  // Safety net — catch any error that slips through
   logger.error('Post-booking notification failed', { error: err?.message });
 });
 
-  return appointment; 
-
-
-
+return fullAppointment;
 } catch (err: any) {
    if (
     err.code === '23505' &&
