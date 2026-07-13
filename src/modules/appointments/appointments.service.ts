@@ -15,13 +15,6 @@ export const createAppointment = async (
   patientId: string,
   input: BookAppointmentInput
 ): Promise<AppointmentRow> => {
-  type AppointmentNotificationRow = {
-    patient_first_name: string;
-    patient_last_name: string;
-    doctor_first_name: string;
-    doctor_last_name: string;
-  };
-
   // 1. Enforce 3-day minimum lead time
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 3);
@@ -105,21 +98,6 @@ export const createAppointment = async (
   );
 
   const appointment = result.rows[0];
-  const notificationResult = await db.query<AppointmentNotificationRow>(
-    `SELECT
-       pu.first_name   AS patient_first_name,
-       pu.last_name    AS patient_last_name,
-       du.first_name   AS doctor_first_name,
-       du.last_name    AS doctor_last_name
-     FROM appointments a
-     JOIN users pu           ON pu.id = a.patient_id
-     JOIN doctor_profiles dp ON dp.id = a.doctor_id
-     JOIN users du           ON du.id = dp.user_id
-     WHERE a.id = $1`,
-    [appointment.id]
-  );
-
-
 
   // Log successfully BEFORE returning the value
   logger.info('Appointment created', { 
