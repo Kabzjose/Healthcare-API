@@ -15,12 +15,6 @@ export const createAppointment = async (
   patientId: string,
   input: BookAppointmentInput
 ): Promise<AppointmentRow> => {
-  type UserContactRow = {
-    phone: string | null;
-    first_name: string;
-    last_name: string;
-  };
-
   type AppointmentNotificationRow = {
     patient_first_name: string;
     patient_last_name: string;
@@ -133,49 +127,56 @@ export const createAppointment = async (
     patientId 
   });
 
-  // Fire SMS and calendar in parallel — don't await so booking responds fast
-void Promise.all([
-  // SMS to patient (only if they have a phone number)
-  db.query<UserContactRow>('SELECT phone, first_name, last_name FROM users WHERE id = $1', [patientId])
-    .then(({ rows }) => {
-      const patient = rows[0];
-      if (patient?.phone) {
-        return smsService.sendBookingConfirmationToPatient({
-          phone: patient.phone,
-          patientName: `${patient.first_name} ${patient.last_name}`,
-          doctorName: `${notification.doctor_first_name} ${notification.doctor_last_name}`,
-          date: input.appointment_date,
-          startTime: appointment.start_time,
-          fee: appointment.consultation_fee,
-        });
-      }
-      return undefined;
-    }),
+  await Promise.all([
+  db.query<{ phone: string | null; first_name: string; last_name: string }>(
+    `SELECT u.phone, u.first_name, u.last_name
+     FROM users u WHERE u.id = $1`,
+    [patientId]
+  ).then(({ rows }) => {
+    if (rows[0]?.phone) {
+      return smsService.sendBookingConfirmationToPatient({
+        phone: rows[0].phone,
+        patientName: `${rows[0].first_name} ${rows[0].last_name}`,
+        doctorName: `${notification.doctor_first_name} ${notification.doctor_last_name}`,
+        date: input.appointment_date,
+        startTime: appointment.start_time,
+        fee: appointment.consultation_fee,
+      });
+    }
+    return Promise.resolve();
+  }).catch((err) => {
+    logger.error('Failed to send patient booking SMS', { error: err?.message });
+  }),
 
-  // SMS to doctor
-  db.query(
+  db.query<{ phone: string | null; first_name: string; last_name: string }>(
     `SELECT u.phone, u.first_name, u.last_name
      FROM users u
      JOIN doctor_profiles dp ON dp.user_id = u.id
      WHERE dp.id = $1`,
     [input.doctor_id]
   ).then(({ rows }) => {
-    const doctor = rows[0] as UserContactRow | undefined;
-    if (doctor?.phone) {
+    if (rows[0]?.phone) {
       return smsService.sendBookingNotificationToDoctor({
-        phone: doctor.phone,
-        doctorName: `${doctor.first_name} ${doctor.last_name}`,
+        phone: rows[0].phone,
+        doctorName: `${rows[0].first_name} ${rows[0].last_name}`,
         patientName: `${notification.patient_first_name} ${notification.patient_last_name}`,
         date: input.appointment_date,
         startTime: appointment.start_time,
         reason: input.reason,
       });
     }
-    return undefined;
+    return Promise.resolve();
+  }).catch((err) => {
+    logger.error('Failed to send doctor booking SMS', { error: err?.message });
   }),
-]);
+]).catch((err) => {
+  // Safety net — catch any error that slips through
+  logger.error('Post-booking notification failed', { error: err?.message });
+});
 
-  return appointment;
+  return appointment; 
+
+
 
 } catch (err: any) {
    if (
