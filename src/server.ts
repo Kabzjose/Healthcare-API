@@ -39,11 +39,12 @@ const startServer = async (): Promise<void> => {
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT',  () => shutdown('SIGINT'));  // Ctrl+C in terminal
 
-    // Catch unhandled promise rejections — log and exit cleanly
-    process.on('unhandledRejection', (reason) => {
-      logger.error('Unhandled promise rejection', { reason });
-      shutdown('unhandledRejection');
-    });
+    // Catch unhandled promise rejections
+   process.on('unhandledRejection', (reason) => {
+  // Log it but do NOT shut down — a failed SMS should never kill the server
+  logger.error('Unhandled promise rejection', { reason });
+  
+});
 
   } catch (err) {
     logger.error('Failed to start server', { error: err });
