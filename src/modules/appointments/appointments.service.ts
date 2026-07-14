@@ -363,7 +363,12 @@ export const getAppointmentById = async (
   );
 
 // Add this temporarily
-console.log('First appointment row:', JSON.stringify(result.rows[0], null, 2));
+// Add temporarily
+logger.info('Doctor appointments query', {
+  doctorUserId,
+  doctorProfileId,
+  filters: { status, date, page, limit },
+});
 
   if (!result.rows[0]) throw ApiError.notFound('Appointment not found');
   return result.rows[0];
