@@ -36,7 +36,7 @@ router.get(
   authenticate,
   authorize('doctor'),
   validateQuery(getDoctorAppointmentsQuerySchema),
-  appointmentsController.getMyAppointments
+  appointmentsController.getDoctorAppointments
 );
 
 router.patch(
