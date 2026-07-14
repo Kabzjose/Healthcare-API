@@ -214,6 +214,17 @@ export const updateAppointmentStatus = async (
   doctorId: string,
   input: UpdateAppointmentStatusInput
 ): Promise<AppointmentRow> => {
+
+  // 1. Resolve doctor_profiles.id from the doctor's user id
+  const profileResult = await db.query<{ id: string }>(
+  `SELECT id FROM doctor_profiles WHERE user_id = $1`,
+  [doctorId]
+);
+
+if (!profileResult.rows[0]) {
+  throw ApiError.notFound('Doctor profile not found.');
+}
+
   // 1. Verify ownership and get current status
   const current = await db.query<{ status: string }>(
     `SELECT status FROM appointments WHERE id = $1 AND doctor_id = $2`,
