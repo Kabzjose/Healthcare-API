@@ -92,6 +92,27 @@ export const getMyAppointments: RequestHandler = async (
   }
 };
 
+// ── List Appointments for Doctor (by doctor's user id) ──────────────────────
+export const getDoctorAppointments: RequestHandler = async (
+   req,
+  res: Response,
+   next: NextFunction
+ ) => {
+   try {
+     const authReq = req as AuthenticatedRequest;
+     const doctorId = authReq.user.userId; // Assuming this is the doctor's profile ID or user ID mapped correctly
+     const result = await appointmentService.getDoctorAppointments(doctorId, authReq.query as any);
+    
+     res.status(200).json({
+       success: true,
+       ...result,
+     });
+   } catch (error) {
+     next(error);
+   }
+ };   
+
+
 // ── Get Single Appointment ───────────────────────────────────────────────────
 export const getAppointmentById: RequestHandler = async (
   req,
