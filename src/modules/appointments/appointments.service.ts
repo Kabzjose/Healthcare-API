@@ -325,6 +325,86 @@ export const listAppointments = async (
   };
 };
 
+// ── List Appointments for Doctor (by doctor's user id) ──────────────────────
+export const getDoctorAppointments = async (
+  doctorUserId: string,
+  query: ListAppointmentsQuery & { date?: string }
+): Promise<PaginatedResult<AppointmentWithDetails>> => {
+  const { page, limit, status, date } = query;
+  const safePage = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+  const safeLimit = Number.isFinite(limit) && limit >= 1 ? Math.floor(limit) : 10;
+  const offset = (safePage - 1) * safeLimit;
+
+  // 1. Resolve doctor_profiles.id from the doctor's user id
+  const profileResult = await db.query<{ id: string }>(
+    `SELECT id FROM doctor_profiles WHERE user_id = $1`,
+    [doctorUserId]
+  );
+
+  if (!profileResult.rows[0]) {
+    throw ApiError.notFound('Doctor profile not found.');
+  }
+
+  const doctorProfileId = profileResult.rows[0].id;
+
+  // Add temporarily
+  logger.info('Doctor appointments query', {
+    doctorUserId,
+    doctorProfileId,
+    filters: { status, date, page, limit },
+  });
+
+  // 2. Build dynamic WHERE clause
+  const conditions: string[] = [`a.doctor_id = $1`];
+  const values: unknown[] = [doctorProfileId];
+  let idx = 2;
+
+  if (status) {
+    conditions.push(`a.status = $${idx++}`);
+    values.push(status);
+  }
+
+  if (date) {
+    conditions.push(`a.appointment_date = $${idx++}`);
+    values.push(date);
+  }
+
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
+  // 3. Count total for pagination
+  const countResult = await db.query<{ count: string }>(
+    `SELECT COUNT(*) FROM appointments a ${whereClause}`,
+    values
+  );
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  // 4. Fetch paginated data
+  values.push(safeLimit, offset);
+  const result = await db.query<AppointmentWithDetails>(
+    `SELECT
+       a.id, a.appointment_date, a.start_time, a.end_time, a.status,
+       a.reason, a.notes, a.consultation_fee, a.created_at,
+       p.first_name || ' ' || p.last_name AS patient_name,
+       p.email AS patient_email,
+       dp.id AS doctor_id,
+       d.first_name || ' ' || d.last_name AS doctor_name,
+       dp.specialization
+     FROM appointments a
+     JOIN users p ON p.id = a.patient_id
+     JOIN doctor_profiles dp ON dp.id = a.doctor_id
+     JOIN users d ON d.id = dp.user_id
+     ${whereClause}
+     ORDER BY a.appointment_date ASC, a.start_time ASC
+     LIMIT $${idx++} OFFSET $${idx}`,
+    values
+  );
+
+  return {
+    data: result.rows,
+    meta: { total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) },
+  };
+};
+
 // ── Get Single Appointment ───────────────────────────────────────────────────
 export const getAppointmentById = async (
   appointmentId: string,
@@ -363,12 +443,7 @@ export const getAppointmentById = async (
   );
 
 // Add this temporarily
-// Add temporarily
-logger.info('Doctor appointments query', {
-  doctorUserId,
-  doctorProfileId,
-  filters: { status, date, page, limit },
-});
+console.log('First appointment row:', JSON.stringify(result.rows[0], null, 2));
 
   if (!result.rows[0]) throw ApiError.notFound('Appointment not found');
   return result.rows[0];
