@@ -57,8 +57,7 @@ export const updateAppointmentStatus: RequestHandler = async (
     const { id } = authReq.params;
     const appointmentId = Array.isArray(id) ? id[0] : id;
     
-    // Note: If req.user.id is the user_id and not the profile_id, 
-    // you might need to fetch the profile_id first like in the doctors module.
+   
     const appointment = await appointmentService.updateAppointmentStatus(appointmentId, doctorId, authReq.body);
     
     res.status(200).json({

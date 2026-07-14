@@ -208,7 +208,6 @@ export const cancelAppointment = async (
   return result.rows[0];
 };
 
-// ── Update Status (Doctor) ───────────────────────────────────────────────────
 export const updateAppointmentStatus = async (
   appointmentId: string,
   doctorId: string,
@@ -217,24 +216,26 @@ export const updateAppointmentStatus = async (
 
   // 1. Resolve doctor_profiles.id from the doctor's user id
   const profileResult = await db.query<{ id: string }>(
-  `SELECT id FROM doctor_profiles WHERE user_id = $1`,
-  [doctorId]
-);
+    `SELECT id FROM doctor_profiles WHERE user_id = $1`,
+    [doctorId]
+  );
 
-if (!profileResult.rows[0]) {
-  throw ApiError.notFound('Doctor profile not found.');
-}
+  if (!profileResult.rows[0]) {
+    throw ApiError.notFound('Doctor profile not found.');
+  }
 
-  // 1. Verify ownership and get current status
+  const doctorProfileId = profileResult.rows[0].id;  // ← add this
+
+  // 2. Verify ownership and get current status
   const current = await db.query<{ status: string }>(
     `SELECT status FROM appointments WHERE id = $1 AND doctor_id = $2`,
-    [appointmentId, doctorId]
+    [appointmentId, doctorProfileId]   // ← use the resolved id, not doctorId
   );
 
   if (!current.rows[0]) throw ApiError.notFound('Appointment not found');
   const currentStatus = current.rows[0].status;
 
-  // 2. Enforce State Machine transitions
+  // 3. Enforce State Machine transitions
   const allowedTransitions: Record<string, string[]> = {
     pending: ['confirmed', 'cancelled'],
     confirmed: ['completed', 'no_show', 'cancelled'],
@@ -246,7 +247,7 @@ if (!profileResult.rows[0]) {
     );
   }
 
-  // 3. Update status
+  // 4. Update status
   const result = await db.query<AppointmentRow>(
     `UPDATE appointments SET status = $1 WHERE id = $2 RETURNING *`,
     [input.status, appointmentId]
