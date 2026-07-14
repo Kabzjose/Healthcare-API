@@ -74,8 +74,17 @@ export const listAppointmentsQuerySchema = z.object({
     }),
 });
 
+// ── Get doctor appointments query params ─────────────────────────────────────
+export const getDoctorAppointmentsQuerySchema = listAppointmentsQuerySchema.extend({
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .optional(),
+});
+
 // ── Inferred types ────────────────────────────────────────────────────────────
 export type BookAppointmentInput = z.infer<typeof bookAppointmentSchema>;
 export type UpdateAppointmentStatusInput = z.infer<typeof updateAppointmentStatusSchema>;
 export type CancelAppointmentInput = z.infer<typeof cancelAppointmentSchema>;
 export type ListAppointmentsQuery = z.infer<typeof listAppointmentsQuerySchema>;
+export type GetDoctorAppointmentsQuery = z.infer<typeof getDoctorAppointmentsQuerySchema>;

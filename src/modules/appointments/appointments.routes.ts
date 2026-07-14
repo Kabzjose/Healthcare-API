@@ -7,6 +7,7 @@ import {
   bookAppointmentSchema,
   updateAppointmentStatusSchema,
   cancelAppointmentSchema,
+  getDoctorAppointmentsQuerySchema,
   listAppointmentsQuerySchema,
 } from './appointments.schema';
 
@@ -34,7 +35,7 @@ router.get(
   '/doctor/my',
   authenticate,
   authorize('doctor'),
-  validateQuery(listAppointmentsQuerySchema),
+  validateQuery(getDoctorAppointmentsQuerySchema),
   appointmentsController.getMyAppointments
 );
 
