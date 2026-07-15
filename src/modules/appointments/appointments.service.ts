@@ -421,11 +421,12 @@ export const getDoctorAppointments = async (
 export const getAppointmentById = async (
   appointmentId: string,
   userId: string,
-  role: string
+  role: string,
+   executor: Pick<typeof db, 'query'> = db 
 ): Promise<AppointmentWithDetails> => {
   const roleCondition = role === 'patient' ? 'a.patient_id = $2' : 'a.doctor_id = $2';
 
-  const result = await db.query<AppointmentWithDetails>(
+  const result = await executor.query<AppointmentWithDetails>(
     `SELECT
    a.id,
    a.appointment_date,
