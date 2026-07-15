@@ -107,7 +107,7 @@ export const createAppointment = async (
 
   
   // Fetch full joined appointment details for SMS
-const fullAppointment = await getAppointmentById(appointment.id, patientId, 'patient');
+const fullAppointment = await getAppointmentById(appointment.id, patientId, 'patient',client);
 
 Promise.all([
   db.query<{ phone: string | null; first_name: string; last_name: string }>(
