@@ -19,7 +19,7 @@ export const getPatientPayments = async (
   patientId: string,
   query: ListPaymentsQuery
 ): Promise<{ data: PaymentRow[]; meta: object }> => {
-  const { status, page, limit } = query;
+  const { status, page = 1, limit = 10 } = query;  
   const offset = (page - 1) * limit;
 
   const conditions = ['patient_id = $1'];
