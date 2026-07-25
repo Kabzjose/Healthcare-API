@@ -39,13 +39,15 @@ export const getPatientPayments = async (
   );
   const total = parseInt(countResult.rows[0].count, 10);
 
+  const limitIdx = idx++;
+  const offsetIdx = idx;
   values.push(limit, offset);
 
   const result = await db.query<PaymentRow>(
     `SELECT * FROM payments
      ${whereClause}
      ORDER BY created_at DESC
-     LIMIT $${idx++} OFFSET $${idx}`,
+     LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
     values
   );
 
