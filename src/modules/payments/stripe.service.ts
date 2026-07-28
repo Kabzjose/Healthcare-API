@@ -62,6 +62,9 @@ export const createCheckoutSession = async (
   if (appt.status === 'cancelled') throw ApiError.badRequest('Cannot pay for a cancelled appointment');
   if (appt.payment_status === 'succeeded') throw ApiError.conflict('Appointment is already paid');
 
+  const successUrl = env.STRIPE_SUCCESS_URL?.replace('localhost:3001', env.APP_URL ?? 'localhost:3001');
+  const cancelUrl = env.STRIPE_CANCEL_URL?.replace('localhost:3001', env.APP_URL ?? 'localhost:3001');
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     mode: 'payment',
@@ -79,8 +82,8 @@ export const createCheckoutSession = async (
         quantity: 1,
       },
     ],
-    success_url: `${env.STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: env.STRIPE_CANCEL_URL,
+    success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: cancelUrl,
     metadata: {
       appointment_id: appt.id,
       patient_id: patientId,

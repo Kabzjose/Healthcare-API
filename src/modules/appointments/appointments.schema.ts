@@ -13,9 +13,15 @@ export const bookAppointmentSchema = z.object({
   appointment_date: z
     .string({ error: 'Appointment date is required' })
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
-    .refine((date) => new Date(date) >= new Date(new Date().toDateString()), {
-      message: 'Appointment date cannot be in the past',
-    }),
+    .refine(
+      (date) => {
+        const minDate = new Date();
+        minDate.setDate(minDate.getDate() + 3);
+        minDate.setHours(0, 0, 0, 0);
+        return new Date(date) >= minDate;
+      },
+      { message: 'Appointments must be booked at least 3 days in advance' }
+    ),
 
   reason: z
     .string()
