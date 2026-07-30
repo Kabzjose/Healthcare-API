@@ -13,8 +13,8 @@
  */
 import request from 'supertest';
 import app from '../../../app';
-import { clearTestData } from '../../helpers/testDb';
-import { registerPatient } from '../../helpers/factories';
+import { clearTestData } from '../../../__tests__/helpers/testDb';
+import { registerPatient } from '../../../__tests__/helpers/factories';
 
 describe('Auth', () => {
   afterEach(async () => {

@@ -7,14 +7,14 @@
  */
 import request from 'supertest';
 import app from '../../../app';
-import { clearTestData } from '../../helpers/testDb';
+import { clearTestData } from '../../../__tests__/helpers/testDb';
 import {
   registerDoctor,
   registerPatient,
   createDoctorProfile,
   createAvailabilitySlot,
   getBookableDate,
-} from '../../helpers/factories';
+} from '../../../__tests__/helpers/factories';
 
 describe('Doctor Availability', () => {
   afterEach(async () => {

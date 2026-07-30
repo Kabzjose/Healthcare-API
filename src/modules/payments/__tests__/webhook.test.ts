@@ -11,7 +11,7 @@
  */
 import request from 'supertest';
 import app from '../../../app';
-import { clearTestData } from '../../helpers/testDb';
+import { clearTestData } from '../../../__tests__/helpers/testDb';
 
 describe('Stripe Webhook Security', () => {
   afterEach(async () => {

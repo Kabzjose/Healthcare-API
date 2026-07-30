@@ -86,12 +86,29 @@ export const createAvailabilitySlot = async (
 export const getBookableDate = (dayOfWeek: string): string => {
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const targetDay = days.indexOf(dayOfWeek.toLowerCase());
+
+  if (targetDay === -1) {
+    throw new Error(
+      `Invalid day_of_week: "${dayOfWeek}". Must be one of: ${days.join(', ')}`
+    );
+  }
+
   const date = new Date();
-  // Start at least 3 days out
+  // Start at least 3 days out to satisfy the 3-day minimum advance-booking rule
   date.setDate(date.getDate() + 3);
-  // Walk forward until we land on the right weekday
+
+  // Walk forward until we land on the right weekday.
+  // Safety counter prevents an infinite loop if day arithmetic ever breaks.
+  let safetyCounter = 0;
   while (date.getDay() !== targetDay) {
     date.setDate(date.getDate() + 1);
+    safetyCounter++;
+    if (safetyCounter > 14) {
+      throw new Error(
+        'getBookableDate exceeded safe iteration limit — check day_of_week logic'
+      );
+    }
   }
+
   return date.toISOString().split('T')[0];
 };

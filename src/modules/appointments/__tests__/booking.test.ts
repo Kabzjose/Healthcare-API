@@ -18,14 +18,14 @@
  */
 import request from 'supertest';
 import app from '../../../app';
-import { clearTestData } from '../../helpers/testDb';
+import { clearTestData } from '../../../__tests__/helpers/testDb';
 import {
   registerPatient,
   registerDoctor,
   createDoctorProfile,
   createAvailabilitySlot,
   getBookableDate,
-} from '../../helpers/factories';
+} from '../../../__tests__/helpers/factories';
 
 describe('Appointment Booking', () => {
   afterEach(async () => {
@@ -156,7 +156,7 @@ describe('Appointment Booking', () => {
     // Fire all 5 booking requests for the SAME slot simultaneously.
     // This proves SELECT...FOR UPDATE row-lock works — only 1 can win the race.
     const results = await Promise.allSettled(
-      patients.map((patient) =>
+      patients.map((patient: Awaited<ReturnType<typeof registerPatient>>) =>
         request(app)
           .post('/appointments')
           .set('Authorization', `Bearer ${patient.access_token}`)
@@ -169,12 +169,12 @@ describe('Appointment Booking', () => {
       )
     );
 
-    const statuses = results.map((r) =>
+    const statuses = results.map((r: PromiseSettledResult<import('supertest').Response>) =>
       r.status === 'fulfilled' ? r.value.status : 0
     );
 
-    const successCount = statuses.filter((s) => s === 201).length;
-    const conflictCount = statuses.filter((s) => s === 409).length;
+    const successCount = statuses.filter((s: number) => s === 201).length;
+    const conflictCount = statuses.filter((s: number) => s === 409).length;
 
     // Exactly ONE must succeed; all others must be rejected as conflicts
     expect(successCount).toBe(1);
